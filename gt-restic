@@ -15,10 +15,10 @@ export RESTIC_PASSWORD_FILE="$PASSWORD_FILE"
 
 usage() {
     echo "Usage:"
-    echo "  gt-restic --send <file> --type <type>              Backup a file"
+    echo "  gt-restic --send <file> --type <type> [--type ...]   Backup a file"
     echo "  gt-restic --search <name>                          Search files in backup"
     echo "  gt-restic --restore <name> [--target <dir>]        Restore a file (default: ./restored)"
-    echo "  gt-restic --list [--type <type>]                   List snapshots, optionally by type"
+    echo "  gt-restic --list [--type <type> ...]               List snapshots, optionally by type"
     echo "  gt-restic --init                                   Initialize repository"
     echo ""
     echo "Types: movie, audiobook, game, show, music, other"
@@ -30,23 +30,25 @@ shift
 case "$cmd" in
     --send)
         FILE=""
-        TYPE=""
+        TAGS=()
         while [[ $# -gt 0 ]]; do
             case "$1" in
-                --type) TYPE="$2"; shift 2 ;;
+                --type) TAGS+=("$2"); shift 2 ;;
                 *)      FILE="$1"; shift ;;
             esac
         done
-        if [[ -z "$FILE" || -z "$TYPE" ]]; then
-            echo "Usage: gt-restic --send <file> --type <type>"
+        if [[ -z "$FILE" || ${#TAGS[@]} -eq 0 ]]; then
+            echo "Usage: gt-restic --send <file> --type <type> [--type ...]"
             exit 1
         fi
         if [[ ! -e "$FILE" ]]; then
             echo "Error: '$FILE' not found"
             exit 1
         fi
-        echo "Backing up '$FILE' as type '$TYPE'..."
-        restic backup --tag "$TYPE" "$FILE"
+        TAG_ARGS=()
+        for t in "${TAGS[@]}"; do TAG_ARGS+=(--tag "$t"); done
+        echo "Backing up '$FILE' with types '${TAGS[*]}'..."
+        restic backup "${TAG_ARGS[@]}" "$FILE"
         ;;
 
     --search)
@@ -77,13 +79,18 @@ case "$cmd" in
         ;;
 
     --list)
-        TYPE=""
-        if [[ "$1" == "--type" && -n "$2" ]]; then
-            TYPE="$2"
-        fi
-        if [[ -n "$TYPE" ]]; then
-            echo "Snapshots of type '$TYPE':"
-            restic snapshots --tag "$TYPE"
+        TAGS=()
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                --type) TAGS+=("$2"); shift 2 ;;
+                *)      shift ;;
+            esac
+        done
+        if [[ ${#TAGS[@]} -gt 0 ]]; then
+            TAG_ARGS=()
+            for t in "${TAGS[@]}"; do TAG_ARGS+=(--tag "$t"); done
+            echo "Snapshots with types '${TAGS[*]}':"
+            restic snapshots "${TAG_ARGS[@]}"
         else
             echo "All snapshots:"
             restic snapshots
