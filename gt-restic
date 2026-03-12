@@ -19,6 +19,8 @@ usage() {
     echo "  gt-restic --search <name>                          Search files in backup"
     echo "  gt-restic --restore <name> [--target <dir>]        Restore a file (default: ./restored)"
     echo "  gt-restic --list [--type <type> ...]               List snapshots, optionally by type"
+    echo "  gt-restic --forget [<id> ...]                      Remove duplicate snapshots (keeps latest per path),"
+    echo "                                                     or remove specific snapshots by ID"
     echo "  gt-restic --init                                   Initialize repository"
     echo ""
     echo "Types: movie, audiobook, game, show, music, other"
@@ -94,6 +96,16 @@ case "$cmd" in
         else
             echo "All snapshots:"
             restic snapshots
+        fi
+        ;;
+
+    --forget)
+        if [[ $# -gt 0 ]]; then
+            echo "Forgetting snapshots: $*..."
+            restic forget "$@"
+        else
+            echo "Forgetting older duplicate snapshots (keeping latest per path)..."
+            restic forget --group-by paths --keep-last 1
         fi
         ;;
 
