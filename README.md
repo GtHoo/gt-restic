@@ -86,6 +86,11 @@ gt-restic --send "DJ.Cactus.Greatest.Hits.flac" --type music
 gt-restic --send "The.Adventures.of.Captain.Socks.S01" --type show
 ```
 
+Multiple types are supported:
+```bash
+gt-restic --send "Atlantis.iso" --type game --type win95win98
+```
+
 ### Search the backup
 ```bash
 gt-restic --search potato
@@ -105,8 +110,22 @@ gt-restic --restore potato --target ~/Movies
 ```bash
 gt-restic --list
 gt-restic --list --type movie
-gt-restic --list --type audiobook
+gt-restic --list --type movie --type show
 ```
+
+### Remove snapshots
+
+Auto-remove older duplicates of the same path, keeping only the latest:
+```bash
+gt-restic --forget
+```
+
+Remove specific snapshots by ID:
+```bash
+gt-restic --forget 26151022 84ce716e
+```
+
+> **Note:** Forgetting a snapshot only removes the record. The actual data is not freed until you run `restic prune`.
 
 ## Supported types
 
