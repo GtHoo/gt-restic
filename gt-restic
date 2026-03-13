@@ -50,7 +50,7 @@ case "$cmd" in
         TAG_ARGS=()
         for t in "${TAGS[@]}"; do TAG_ARGS+=(--tag "$t"); done
         echo "Backing up '$FILE' with types '${TAGS[*]}'..."
-        restic backup "${TAG_ARGS[@]}" "$FILE"
+        restic backup "${TAG_ARGS[@]}" -- "$FILE"
         ;;
 
     --search)
