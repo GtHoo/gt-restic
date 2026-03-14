@@ -113,6 +113,13 @@ gt-restic --list --type movie
 gt-restic --list --type movie --type show
 ```
 
+### Remove a type from a snapshot
+
+```bash
+gt-restic --untag 26151022 --type movie
+gt-restic --untag 26151022 --type movie --type win95win98
+```
+
 ### Remove snapshots
 
 Auto-remove older duplicates of the same path, keeping only the latest:

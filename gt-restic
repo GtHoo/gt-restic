@@ -19,6 +19,7 @@ usage() {
     echo "  gt-restic --search <name>                          Search files in backup"
     echo "  gt-restic --restore <name> [--target <dir>]        Restore a file (default: ./restored)"
     echo "  gt-restic --list [--type <type> ...]               List snapshots, optionally by type"
+    echo "  gt-restic --untag <id> --type <type> [--type ...]  Remove type(s) from a snapshot"
     echo "  gt-restic --forget [<id> ...]                      Remove duplicate snapshots (keeps latest per path),"
     echo "                                                     or remove specific snapshots by ID"
     echo "  gt-restic --init                                   Initialize repository"
@@ -30,13 +31,13 @@ cmd="$1"
 shift
 
 case "$cmd" in
-    --send)
+    --send|--backup)
         FILE=""
         TAGS=()
         while [[ $# -gt 0 ]]; do
             case "$1" in
-                --type) TAGS+=("$2"); shift 2 ;;
-                *)      FILE="$1"; shift ;;
+                --type|--tags) TAGS+=("$2"); shift 2 ;;
+                *)             FILE="$1"; shift ;;
             esac
         done
         if [[ -z "$FILE" || ${#TAGS[@]} -eq 0 ]]; then
@@ -84,8 +85,8 @@ case "$cmd" in
         TAGS=()
         while [[ $# -gt 0 ]]; do
             case "$1" in
-                --type) TAGS+=("$2"); shift 2 ;;
-                *)      shift ;;
+                --type|--tags) TAGS+=("$2"); shift 2 ;;
+                *)             shift ;;
             esac
         done
         if [[ ${#TAGS[@]} -gt 0 ]]; then
@@ -97,6 +98,25 @@ case "$cmd" in
             echo "All snapshots:"
             restic snapshots
         fi
+        ;;
+
+    --untag)
+        ID=""
+        TAGS=()
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                --type|--tags) TAGS+=("$2"); shift 2 ;;
+                *)             ID="$1"; shift ;;
+            esac
+        done
+        if [[ -z "$ID" || ${#TAGS[@]} -eq 0 ]]; then
+            echo "Usage: gt-restic --untag <id> --type <type> [--type ...]"
+            exit 1
+        fi
+        TAG_ARGS=()
+        for t in "${TAGS[@]}"; do TAG_ARGS+=(--remove "$t"); done
+        echo "Removing types '${TAGS[*]}' from snapshot '$ID'..."
+        restic tag "${TAG_ARGS[@]}" "$ID"
         ;;
 
     --forget)
